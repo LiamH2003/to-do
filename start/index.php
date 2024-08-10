@@ -1,3 +1,8 @@
+<?php
+include('../database/db_connection.php');
+
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
