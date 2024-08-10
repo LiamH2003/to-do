@@ -56,7 +56,7 @@ a:hover {
 }
 
 .inputGroup {
-    margin-top: 30px;
+    margin-bottom: 20px;
 }
 
 label {
@@ -67,7 +67,6 @@ label {
 }
 
 input[type="text"],
-input[type="email"],
 input[type="password"] {
     width: 100%;
     padding: 10px;
@@ -91,4 +90,12 @@ input[type="submit"] {
 
 input[type="submit"]:hover {
     background-color: #1fa9b8;
+}
+
+.form-group {
+    margin-top: 30px;
+}
+
+.alert {
+    color: red;
 }

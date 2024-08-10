@@ -40,12 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $stmt->bind_result($id, $username, $hashed_password);
 
                     if ($stmt->fetch()) {
-                        // Debugging: Output retrieved values
-                        echo "<pre>";
-                        echo "Username from DB: $username\n";
-                        echo "Hashed Password from DB: $hashed_password\n";
-                        echo "Input Password: $password\n"; // Show the password for debugging (remove this in production)
-                        echo "</pre>";
 
                         // Verify password
                         if (password_verify($password, $hashed_password)) {
@@ -91,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do - Log in</title>
     <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/loginstyle2.css">
+    <link rel="stylesheet" href="../styles/loginstyle3.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
 </head>
 <body>

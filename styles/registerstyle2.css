@@ -92,3 +92,7 @@ input[type="submit"] {
 input[type="submit"]:hover {
     background-color: #1fa9b8;
 }
+
+.alert {
+    color: red;
+}
