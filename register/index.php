@@ -14,7 +14,7 @@
             <div class="contentDiv">
                 <div class="innerContentDiv">
                     <h2>Create Your Account</h2>
-                    <form action="/register" method="POST">
+                    <form action="register_process.php" method="POST">
                         <div class="inputGroup">
                             <label for="username">Username</label>
                             <input type="text" id="username" name="username" required>
