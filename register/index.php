@@ -82,7 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do - Register</title>
     <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/registerstyle2.css">
+    <link rel="stylesheet" href="../styles/registerstyle3.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
 </head>
 <body>
