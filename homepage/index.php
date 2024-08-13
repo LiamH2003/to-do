@@ -21,6 +21,70 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
     <link rel="stylesheet" href="../styles/homestyle6.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
     <script type="text/javascript" src="../script/homescript.js"></script>
+    <script type="text/javascript">
+        // Fetch and display lists on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('../functions/fetch_lists.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(lists => {
+                    const navCategories = document.querySelector('.navCategories');
+                    navCategories.innerHTML = ''; // Clear existing items
+
+                    lists.forEach(list => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'navItem';
+                        listItem.dataset.category = list.id;
+                        listItem.textContent = list.title;
+                        navCategories.appendChild(listItem);
+
+                        // Add click event listener to each list item
+                        listItem.addEventListener('click', function() {
+                            fetchTasks(list.id);
+                        });
+                    });
+                })
+                .catch(error => console.error('Error fetching lists:', error));
+        });
+
+        // Function to fetch and display tasks for a specific list
+        function fetchTasks(listId) {
+            fetch(`../functions/fetch_tasks.php?list_id=${listId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(tasks => {
+                    const taskList = document.querySelector('.taskList');
+                    taskList.innerHTML = ''; // Clear existing tasks
+
+                    tasks.forEach(task => {
+                        const taskItem = document.createElement('li');
+                        taskItem.className = 'taskItem';
+
+                        taskItem.innerHTML = `
+                            <div class="taskCheckbox">
+                                <input type="checkbox" id="task${task.id}" ${task.status === 'Completed' ? 'checked' : ''}>
+                            </div>
+                            <div class="taskContent">
+                                <label for="task${task.id}">
+                                    <span class="taskTitle">${task.title}</span>
+                                    <span class="taskDate">${new Date(task.deadline).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                </label>
+                            </div>
+                        `;
+                        taskList.appendChild(taskItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching tasks:', error));
+        }
+    </script>
 </head>
 <body>
     <div class="bodyDiv">
@@ -46,9 +110,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 </div>
                 <div class="navList">
                     <ul class="navCategories">
-                        <li class="navItem" data-category="personal">Personal</li>
-                        <li class="navItem" data-category="work">Work</li>
-                        <li class="navItem" data-category="others">Others</li>
                     </ul>
                 </div>
                 <div class="newList">
@@ -61,61 +122,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     <h3>School</h3>
                     <button class="sorting">Sorted by due date</button>
                     <ul class="taskList">
-                        <li class="taskItem">
-                            <div class="taskCheckbox">
-                                <input type="checkbox" id="task1">
-                            </div>
-                            <div class="taskContent">
-                                <label for="task1">
-                                    <span class="taskTitle">Design 4 - Tweede zit</span>
-                                    <span class="taskDate">Sun, 25 Aug</span>
-                                </label>
-                            </div>
-                        </li>
-                        <li class="taskItem">
-                            <div class="taskCheckbox">
-                                <input type="checkbox" id="task2">
-                            </div>
-                            <div class="taskContent">
-                                <label for="task2">
-                                    <span class="taskTitle">Development 4 - Tweede zit</span>
-                                    <span class="taskDate">Thu, 22 Aug</span>
-                                </label>
-                            </div>
-                        </li>
-                        <li class="taskItem">
-                            <div class="taskCheckbox">
-                                <input type="checkbox" id="task3">
-                            </div>
-                            <div class="taskContent">
-                                <label for="task3">
-                                    <span class="taskTitle">Lab 2 - Tweede zit</span>
-                                    <span class="taskDate">Mon, 19 Aug</span>
-                                </label>
-                            </div>
-                        </li>
-                        <li class="taskItem">
-                            <div class="taskCheckbox">
-                                <input type="checkbox" id="task4">
-                            </div>
-                            <div class="taskContent">
-                                <label for="task4">
-                                    <span class="taskTitle">Design 2 - Tweede zit</span>
-                                    <span class="taskDate">Mon, 19 Aug</span>
-                                </label>
-                            </div>
-                        </li>
-                        <li class="taskItem">
-                            <div class="taskCheckbox">
-                                <input type="checkbox" id="task5">
-                            </div>
-                            <div class="taskContent">
-                                <label for="task5">
-                                    <span class="taskTitle">Communicatie 3 - Voorbereiding</span>
-                                    <span class="taskDate">Fri, 16 Aug</span>
-                                </label>
-                            </div>
-                        </li>
+                        
                     </ul>
                 </div>
             </div>
