@@ -40,13 +40,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $stmt->bind_result($id, $username, $hashed_password);
 
                     if ($stmt->fetch()) {
-
                         // Verify password
                         if (password_verify($password, $hashed_password)) {
                             // Password is correct, start a new session
                             $_SESSION["loggedin"] = true;
                             $_SESSION["id"] = $id;
                             $_SESSION["username"] = $username;
+
+                            // Fetch the user's email from the database
+                            $email_sql = "SELECT email FROM account WHERE id = ?";
+                            if ($email_stmt = $conn->prepare($email_sql)) {
+                                $email_stmt->bind_param("i", $id);
+                                $email_stmt->execute();
+                                $email_stmt->bind_result($email);
+                                if ($email_stmt->fetch()) {
+                                    $_SESSION["email"] = $email;
+                                }
+                                $email_stmt->close();
+                            }
 
                             // Redirect to the homepage
                             header("location: ../homepage/index.php");

@@ -15,7 +15,7 @@ body {
     width: 100%;
     height: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -29,6 +29,8 @@ body {
     background-color: white;
     height: 100vh;
     min-width: 300px;
+    display: flex;
+    flex-direction: column;
 }
 
 .innerLeftDiv {
@@ -127,7 +129,6 @@ body {
 .navItem {
     padding: 15px;
     border: 1px solid #ddd;
-    border-radius: 5px;
     background-color: #f9f9f9;
     color: #333;
     font-size: 1em;
@@ -135,10 +136,43 @@ body {
     transition: background-color 0.3s, color 0.3s, border-color 0.3s;
     text-align: left; /* Align text to the left */
     margin-bottom: 10px; /* Space between items */
+    margin-top: 10px;
 }
 
 .navItem:hover {
-    background-color: #41c1d6; /* Change background color on hover */
-    color: white; /* Change text color on hover */
+    background-color: rgb(236, 253, 255);
     border-color: #41c1d6; /* Match border color with background */
+}
+
+
+.navList {
+    border-top: 1px solid black;
+    flex: 1; /* Takes up remaining space */
+    overflow-y: auto; /* Allows scrolling if content overflows */
+}
+
+.newList {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    font-size: 1em;
+    cursor: pointer; /* Change cursor to pointer */
+    transition: background-color 0.3s, border-color 0.3s;
+    border-radius: 5px;
+    margin: 15px;
+    text-align: left;
+    margin-top: auto; /* Pushes the item to the bottom */
+}
+
+.newList:hover {
+    background-color: rgb(236, 253, 255); /* Change background color on hover */
+    border-color: #41c1d6; /* Match border color with background */
+}
+
+.newList .plusIcon {
+    margin-right: 10px; /* Space between icon and text */
+    width: 25px;
+    height: 25px;
 }
