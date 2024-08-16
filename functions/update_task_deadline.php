@@ -1,20 +1,30 @@
 <?php
-header('Content-Type: application/json');
-require_once '../db_connection.php'; // Include your database connection file
+require_once '../database/db_connection.php'; // Include your DB connection
 
-$data = json_decode(file_get_contents('php://input'), true);
-$taskId = isset($data['task_id']) ? intval($data['task_id']) : 0;
-$deadline = isset($data['deadline']) ? $data['deadline'] : '';
+// Get JSON input
+$input = json_decode(file_get_contents('php://input'), true);
 
-if ($taskId > 0 && !empty($deadline)) {
-    $sql = "UPDATE tasks SET deadline = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('si', $deadline, $taskId);
-    $success = $stmt->execute();
-    $stmt->close();
+// Validate input
+if (isset($input['task_id']) && isset($input['deadline'])) {
+    $task_id = $input['task_id'];
+    $deadline = $input['deadline'];
 
-    echo json_encode(['success' => $success]);
+    // Prepare and execute SQL query
+    $query = "UPDATE tasks SET deadline = ? WHERE id = ?";
+    if ($stmt = $conn->prepare($query)) {
+        $stmt->bind_param('si', $deadline, $task_id);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Database error']);
+        }
+        $stmt->close();
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Query preparation error']);
+    }
 } else {
     echo json_encode(['success' => false, 'error' => 'Invalid input']);
 }
+
+$conn->close();
 ?>

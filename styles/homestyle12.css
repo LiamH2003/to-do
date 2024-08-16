@@ -355,3 +355,16 @@ input[type="checkbox"] {
     padding: 8px;
     resize: none;
 }
+
+.editTitleInput {
+    width: 100%;
+    font-size: 1em;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    border-bottom: 5px solid #41c1d6;
+}
+
+.editTitleInput:focus {
+    border: 0px;
+    outline: none;
+}

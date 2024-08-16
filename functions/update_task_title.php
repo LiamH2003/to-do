@@ -1,22 +1,40 @@
 <?php
-header('Content-Type: application/json');
-require_once '../db_connection.php'; // Include your database connection file
+// Database connection
+$servername = "localhost:3306";
+$username = "root";  // Replace with your database username
+$password = "track22";  // Replace with your database password
+$dbname = "to-do";  // The name of your database
 
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Get the JSON input
 $data = json_decode(file_get_contents('php://input'), true);
-$taskId = isset($data['task_id']) ? intval($data['task_id']) : 0;
-$title = isset($data['title']) ? $data['title'] : '';
+$task_id = isset($data['task_id']) ? $data['task_id'] : null;
+$title = isset($data['title']) ? $data['title'] : null;
 
-if ($taskId > 0 && !empty($title)) {
-    $sql = "UPDATE tasks SET title = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('si', $title, $taskId);
-    $success = $stmt->execute();
+$response = array('success' => false);
+
+if ($task_id && $title) {
+    $stmt = $conn->prepare("UPDATE tasks SET title = ? WHERE id = ?");
+    $stmt->bind_param("si", $title, $task_id);
+
+    if ($stmt->execute()) {
+        $response['success'] = true;
+    } else {
+        $response['error'] = "Error updating task title.";
+    }
+
     $stmt->close();
-
-    echo json_encode(['success' => $success]);
 } else {
-    echo json_encode(['success' => false, 'error' => 'Invalid input']);
+    $response['error'] = "Invalid input.";
 }
 
 $conn->close();
+
+header('Content-Type: application/json');
+echo json_encode($response);
 ?>

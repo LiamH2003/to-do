@@ -31,9 +31,115 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
             const taskDeadlineElement = document.getElementById('taskDeadline');
             const taskDescriptionElement = document.getElementById('taskDescription');
 
+            taskDeadlineElement.addEventListener('change', function() {
+                const newDeadline = this.value.trim();
+                if (newDeadline && currentTaskId) {
+                    updateTaskDeadline(newDeadline);
+                }
+            });
+
+            function updateTaskDescription(newDescription) {
+                fetch('../functions/update_task_description.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: currentTaskId, description: newDescription })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Task description updated successfully.');
+                        // Update task description in the contentDiv as well
+                        const taskDescriptionInContentDiv = document.querySelector(`.taskItem[data-task-id="${currentTaskId}"] .taskDescription`);
+                        if (taskDescriptionInContentDiv) {
+                            taskDescriptionInContentDiv.textContent = newDescription || 'No Description';
+                        }
+                    } else {
+                        console.error('Error updating task description:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+            taskDescriptionElement.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent the default ENTER key behavior (e.g., adding a newline)
+                    const newDescription = taskDescriptionElement.value.trim();
+                    if (newDescription) {
+                        updateTaskDescription(newDescription);
+                    }
+                }
+            });
+
+            function updateTaskDeadline(newDeadline) {
+                console.log('Updating task deadline. Task ID:', currentTaskId, 'New Deadline:', newDeadline); // Log task ID and new deadline
+
+                fetch('../functions/update_task_deadline.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: currentTaskId, deadline: newDeadline })
+                })
+                .then(response => {
+                    console.log('Response received:', response); // Log the raw response
+                    return response.text(); // Read the response as text
+                })
+                .then(text => {
+                    console.log('Response text:', text); // Log the raw response text
+
+                    try {
+                        const data = JSON.parse(text); // Attempt to parse the response as JSON
+                        console.log('Response data:', data); // Log the parsed response data
+
+                        if (data.success) {
+                            console.log('Task deadline updated successfully.');
+                            // Update task deadline in the task list as well
+                            const taskDateElement = document.querySelector(`.taskItem[data-task-id="${currentTaskId}"] .taskDate`);
+                            if (taskDateElement) {
+                                const deadline = new Date(newDeadline);
+                                taskDateElement.textContent = deadline.toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                });
+                            }
+                        } else {
+                            console.error('Error updating task deadline:', data.error);
+                        }
+                    } catch (error) {
+                        console.error('Failed to parse JSON:', error); // Handle JSON parsing errors
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+
+
             function toggleRightNav() {
                 rightNavDiv.classList.toggle('active');
             }
+
+    
+            function fetchTaskDetails(taskId) {
+                fetch(`../functions/fetch_task_details.php?task_id=${taskId}`)
+                    .then(response => response.json())
+                    .then(task => {
+                        if (task && !task.error) {
+                            document.getElementById('taskTitle').textContent = task.title || 'No Title';
+                            document.getElementById('taskDeadline').value = task.deadline || '';
+                            document.getElementById('taskDescription').value = task.description || '';
+                            currentTaskId = taskId;
+                            toggleRightNav();
+                        } else {
+                            console.error('Task not found or error:', task.error);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching task details:', error));
+            }
+
+            
 
             document.addEventListener('click', function(event) {
                 const isClickInsideRightNav = rightNavDiv.contains(event.target);
@@ -65,6 +171,61 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     .catch(error => console.error('Error fetching task details:', error));
             }
 
+            function updateTaskTitle(newTitle) {
+                fetch('../functions/update_task_title.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: currentTaskId, title: newTitle })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Task title updated successfully.');
+                        // Update task title in the contentDiv as well
+                        const taskTitleInContentDiv = document.querySelector(`.taskItem[data-task-id="${currentTaskId}"] .taskTitle`);
+                        if (taskTitleInContentDiv) {
+                            taskTitleInContentDiv.textContent = newTitle;
+                        }
+                    } else {
+                        console.error('Error updating task title:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            taskTitleElement.addEventListener('click', function() {
+                const currentTitle = taskTitleElement.textContent;
+                const inputField = document.createElement('input');
+                inputField.type = 'text';
+                inputField.value = currentTitle;
+                inputField.className = 'editTitleInput';
+
+                taskTitleElement.textContent = '';
+                taskTitleElement.appendChild(inputField);
+                inputField.focus();
+
+                inputField.addEventListener('blur', function() {
+                    const newTitle = inputField.value.trim();
+                    if (newTitle !== currentTitle) {
+                        updateTaskTitle(newTitle);
+                    }
+                    taskTitleElement.textContent = newTitle || currentTitle;
+                });
+
+                inputField.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        const newTitle = inputField.value.trim();
+                        if (newTitle !== currentTitle) {
+                            updateTaskTitle(newTitle);
+                        }
+                        taskTitleElement.textContent = newTitle || currentTitle;
+                    }
+                });
+            });
+
 
 
             function updateTaskDescription(newDescription) {
@@ -88,12 +249,17 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
 
             taskDescriptionElement.addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
-                    event.preventDefault();
-                    updateTaskDescription(this.value.trim());
+                    event.preventDefault(); // Prevent the default Enter key behavior
+                    const newDescription = this.value.trim();
+                    if (newDescription) {
+                        updateTaskDescription(newDescription);
+                    }
+                    this.blur(); // Remove focus from the textarea
                 }
             });
 
             taskDeadlineElement.addEventListener('blur', function() {
+                console.log("Made it here");
                 const newDeadline = this.value.trim();
                 if (newDeadline) {
                     fetch('../functions/update_task_deadline.php', {
@@ -117,14 +283,9 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
 
             // JavaScript Function to Set Up Click Listener
             function setupTaskItemClickListener(taskItem) {
-                console.log("Setting up click listener");
-                console.log('Task item data-task-id:', taskItem.dataset.taskId); // Debugging line
-
                 taskItem.addEventListener('click', function(event) {
-                    // Check if the click is not on the checkbox
                     if (event.target.tagName.toLowerCase() !== 'input') {
                         const taskId = taskItem.dataset.taskId;
-                        console.log('Task ID from dataset:', taskId); // Debugging line
                         if (taskId) {
                             fetchTaskDetails(taskId);
                         } else {
@@ -132,7 +293,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                         }
                     }
                 });
-            }
+}
 
 
 
