@@ -2,13 +2,33 @@
 session_start();
 include '../database/db_connection.php';
 
-// Check if list_id is provided
 if (isset($_GET['list_id'])) {
     $list_id = intval($_GET['list_id']);
     $user_id = $_SESSION['id']; // Assuming user ID is stored in session
 
-    // Query to fetch tasks for the provided list ID
-    $sql = "SELECT id, title, deadline, status FROM tasks WHERE list_id = ? AND list_id IN (SELECT id FROM lists WHERE user_id = ?)";
+    // Fetch sorting option from query parameters
+    $sort = isset($_GET['sort']) ? $_GET['sort'] : 'deadline-ascending';
+
+    // Determine sorting column and order
+    switch ($sort) {
+        case 'title-ascending':
+            $orderBy = 'title ASC';
+            break;
+        case 'title-descending':
+            $orderBy = 'title DESC';
+            break;
+        case 'deadline-ascending':
+            $orderBy = 'deadline ASC';
+            break;
+        case 'deadline-descending':
+            $orderBy = 'deadline DESC';
+            break;
+        default:
+            $orderBy = 'deadline ASC';
+            break;
+    }
+
+    $sql = "SELECT id, title, deadline, status FROM tasks WHERE list_id = ? AND list_id IN (SELECT id FROM lists WHERE user_id = ?) ORDER BY $orderBy";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('ii', $list_id, $user_id);
     $stmt->execute();
@@ -19,7 +39,7 @@ if (isset($_GET['list_id'])) {
         $tasks[] = $row;
     }
 
-    // Return tasks as JSON
     echo json_encode($tasks);
 }
+
 ?>

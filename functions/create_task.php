@@ -8,7 +8,20 @@ if (isset($data['title']) && isset($data['list_id'])) {
     $title = $data['title'];
     $list_id = (int) $data['list_id'];
 
-    // Prepare the SQL query
+    // Check if a task with the same title already exists in the specified list
+    $checkQuery = $conn->prepare('SELECT COUNT(*) FROM tasks WHERE list_id = ? AND title = ?');
+    $checkQuery->bind_param('is', $list_id, $title);
+    $checkQuery->execute();
+    $checkQuery->bind_result($count);
+    $checkQuery->fetch();
+    $checkQuery->close();
+
+    if ($count > 0) {
+        echo json_encode(['success' => false, 'error' => 'A task with this name already exists in the selected list.']);
+        exit;
+    }
+
+    // Prepare the SQL query to insert the new task
     $query = $conn->prepare('INSERT INTO tasks (list_id, title, status, deadline) VALUES (?, ?, "Pending", NULL)');
 
     // Check if the statement preparation was successful

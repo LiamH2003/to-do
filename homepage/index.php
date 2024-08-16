@@ -126,23 +126,36 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
             addTaskInput.addEventListener('blur', cleanupAddTaskInput);
         });
 
-        function fetchTasks(listId) {
-            fetch(`../functions/fetch_tasks.php?list_id=${listId}`)
+        function fetchTasks(listId, sortOption = 'deadline-ascending') {
+            fetch(`../functions/fetch_tasks.php?list_id=${listId}&sort=${sortOption}`)
                 .then(response => response.json())
                 .then(tasks => {
                     const taskList = document.querySelector('.taskList');
                     taskList.innerHTML = ''; // Clear the task list
 
-                    // Sort tasks by deadline (earliest first)
+                    // Sort tasks based on the sort option
                     tasks.sort((a, b) => {
                         const deadlineA = a.deadline ? new Date(a.deadline) : null;
                         const deadlineB = b.deadline ? new Date(b.deadline) : null;
 
-                        if (!deadlineA && deadlineB) return 1;  // If task A has no deadline, it comes after task B
-                        if (deadlineA && !deadlineB) return -1; // If task B has no deadline, it comes after task A
-                        if (!deadlineA && !deadlineB) return 0; // If both tasks have no deadline, keep their order
-
-                        return deadlineA - deadlineB; // Sort by deadline
+                        switch (sortOption) {
+                            case 'title-ascending':
+                                return a.title.localeCompare(b.title);
+                            case 'title-descending':
+                                return b.title.localeCompare(a.title);
+                            case 'deadline-ascending':
+                                if (!deadlineA && deadlineB) return -1;
+                                if (deadlineA && !deadlineB) return 1;
+                                if (!deadlineA && !deadlineB) return 0;
+                                return deadlineA - deadlineB;
+                            case 'deadline-descending':
+                                if (!deadlineA && deadlineB) return 1;
+                                if (deadlineA && !deadlineB) return -1;
+                                if (!deadlineA && !deadlineB) return 0;
+                                return deadlineB - deadlineA;
+                            default:
+                                return 0;
+                        }
                     });
 
                     tasks.forEach(task => {
@@ -162,7 +175,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                             });
                         }
 
-                        // Apply red text color if the deadline has passed
                         const deadlineClass = deadline && deadline < currentDateTime ? 'deadline-passed' : '';
 
                         taskItem.innerHTML = `
@@ -179,7 +191,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
 
                         taskList.appendChild(taskItem);
 
-                        // Add event listener to the checkbox
                         taskItem.querySelector('input[type="checkbox"]').addEventListener('change', function() {
                             if (this.checked) {
                                 deleteTask(task.id);
@@ -189,6 +200,14 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 })
                 .catch(error => console.error('Error fetching tasks:', error));
         }
+
+        // Add event listener to the sorting select element
+        document.getElementById('sortingOptions').addEventListener('change', function() {
+            if (currentListId) {
+                fetchTasks(currentListId, this.value);
+            }
+        });
+
 
 
 
@@ -241,11 +260,13 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 if (data.success) {
                     fetchTasks(listId); // Refresh task list
                 } else {
+                    alert(data.error); // Display error message
                     console.error('Error creating task:', data.error);
                 }
             })
             .catch(error => console.error('Error:', error));
         }
+
 
         function deleteTask(taskId) {
             fetch(`../functions/delete_task.php?task_id=${taskId}`, {
@@ -332,7 +353,14 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     <!-- This is the new wrapper div -->
                     <div class="taskContainer" style="display: none;">
                         <h3>Tasks</h3>
-                        <button class="sorting">Sorted by due date</button>
+                        
+                            <select class="sorting" id="sortingOptions">
+                                <option value="title-ascending">Title (A-Z)</option>
+                                <option value="title-descending">Title (Z-A)</option>
+                                <option value="deadline-ascending">Deadline (Earliest First)</option>
+                                <option value="deadline-descending">Deadline (Latest First)</option>
+                            </select>
+
                         <ul class="taskList">
                             <!-- Tasks will be populated here dynamically -->
                         </ul>
