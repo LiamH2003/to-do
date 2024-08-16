@@ -18,13 +18,126 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do</title>
     <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/homestyle11.css">
+    <link rel="stylesheet" href="../styles/homestyle12.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
     <script type="text/javascript" src="../script/homescript.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function() {
             let currentListId = null; // Variable to keep track of the current list ID
-            const taskContainer = document.querySelector('.taskContainer'); // Get the task container div
+            let currentTaskId = null; // Variable to keep track of the current task ID
+            const taskContainer = document.querySelector('.taskContainer');
+            const rightNavDiv = document.querySelector('.rightNavDiv');
+            const taskTitleElement = document.getElementById('taskTitle');
+            const taskDeadlineElement = document.getElementById('taskDeadline');
+            const taskDescriptionElement = document.getElementById('taskDescription');
+
+            function toggleRightNav() {
+                rightNavDiv.classList.toggle('active');
+            }
+
+            document.addEventListener('click', function(event) {
+                const isClickInsideRightNav = rightNavDiv.contains(event.target);
+                const isClickInsideTaskContainer = document.querySelector('.taskContainer') && document.querySelector('.taskContainer').contains(event.target);
+                const isClickInsideLeftNav = document.querySelector('.leftNavDiv').contains(event.target);
+
+                if (!isClickInsideRightNav && !isClickInsideTaskContainer && !isClickInsideLeftNav) {
+                    rightNavDiv.classList.remove('active');
+                }
+            });
+
+            function fetchTaskDetails(taskId) {
+                console.log("Fetching task details for ID:", taskId);
+                fetch(`../functions/fetch_task_details.php?task_id=${taskId}`)
+                    .then(response => response.json())
+                    .then(task => {
+                        console.log('Task data:', task);  // Log the task data
+                        if (task && !task.error) {
+                            // Update the DOM elements with task details
+                            document.getElementById('taskTitle').textContent = task.title || 'No Title';
+                            document.getElementById('taskDeadline').value = task.deadline || '';
+                            document.getElementById('taskDescription').value = task.description || '';
+                            currentTaskId = taskId;
+                            toggleRightNav();
+                        } else {
+                            console.error('Task not found or error:', task.error);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching task details:', error));
+            }
+
+
+
+            function updateTaskDescription(newDescription) {
+                fetch('../functions/update_task_description.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: currentTaskId, description: newDescription })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Task description updated successfully.');
+                    } else {
+                        console.error('Error updating task description:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            taskDescriptionElement.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    updateTaskDescription(this.value.trim());
+                }
+            });
+
+            taskDeadlineElement.addEventListener('blur', function() {
+                const newDeadline = this.value.trim();
+                if (newDeadline) {
+                    fetch('../functions/update_task_deadline.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ task_id: currentTaskId, deadline: newDeadline })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Task deadline updated successfully.');
+                        } else {
+                            console.error('Error updating task deadline:', data.error);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+
+            // JavaScript Function to Set Up Click Listener
+            function setupTaskItemClickListener(taskItem) {
+                console.log("Setting up click listener");
+                console.log('Task item data-task-id:', taskItem.dataset.taskId); // Debugging line
+
+                taskItem.addEventListener('click', function(event) {
+                    // Check if the click is not on the checkbox
+                    if (event.target.tagName.toLowerCase() !== 'input') {
+                        const taskId = taskItem.dataset.taskId;
+                        console.log('Task ID from dataset:', taskId); // Debugging line
+                        if (taskId) {
+                            fetchTaskDetails(taskId);
+                        } else {
+                            console.error('Task ID is missing.');
+                        }
+                    }
+                });
+            }
+
+
+
+
+            
 
             // Fetch and display lists on page load
             fetch('../functions/fetch_lists.php')
@@ -59,6 +172,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     });
                 })
                 .catch(error => console.error('Error fetching lists:', error));
+
 
         // Handle New List creation
         const newListButton = document.querySelector('.newList');
@@ -127,6 +241,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
         });
 
         function fetchTasks(listId, sortOption = 'deadline-ascending') {
+            rightNavDiv.classList.remove('active'); // Make sure the rightNavDiv is not active
             fetch(`../functions/fetch_tasks.php?list_id=${listId}&sort=${sortOption}`)
                 .then(response => response.json())
                 .then(tasks => {
@@ -161,6 +276,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     tasks.forEach(task => {
                         const taskItem = document.createElement('li');
                         taskItem.className = 'taskItem';
+                        taskItem.dataset.taskId = task.id; // Set the data-task-id attribute
 
                         const deadline = task.deadline ? new Date(task.deadline) : null;
                         const currentDateTime = new Date();
@@ -191,15 +307,21 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
 
                         taskList.appendChild(taskItem);
 
-                        taskItem.querySelector('input[type="checkbox"]').addEventListener('change', function() {
-                            if (this.checked) {
-                                deleteTask(task.id);
+                        // Set up click listener for taskItem
+                        setupTaskItemClickListener(taskItem);
+
+                        // Prevent clicks on taskItem from toggling the checkbox
+                        taskItem.addEventListener('click', function(event) {
+                            if (event.target.tagName.toLowerCase() !== 'input') {
+                                event.preventDefault(); // Prevent default behavior if not clicking checkbox
                             }
                         });
                     });
+
                 })
                 .catch(error => console.error('Error fetching tasks:', error));
         }
+
 
         // Add event listener to the sorting select element
         document.getElementById('sortingOptions').addEventListener('change', function() {
@@ -373,8 +495,27 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
             </div>
 
             <div class="rightNavDiv">
-                <span class="closeBtn" onclick="closeRightNav()">x</span>
+                <div class="taskDetails">
+                    <!-- Task Title Section -->
+                    <div class="taskTitleSection">
+                        <h2 id="taskTitle">Task Title</h2>
+                    </div>
+
+                    <!-- Task Deadline Section -->
+                    <div class="taskDeadlineSection">
+                        <label for="taskDeadline">Deadline:</label>
+                        <input type="date" id="taskDeadline" value="">
+                    </div>
+
+                    <!-- Task Description Section -->
+                    <div class="taskDescriptionSection">
+                        <label for="taskDescription">Description:</label>
+                        <textarea id="taskDescription" placeholder="Enter task description..."></textarea>
+                    </div>
+                </div>
             </div>
+
+
         </div>
     </div>
 </body>
