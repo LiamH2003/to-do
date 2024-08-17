@@ -412,17 +412,27 @@ input[type="checkbox"] {
 #taskFilesList {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 #taskFilesList li {
     display: flex;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+#taskFilesList li:hover {
+    background-color: #e0f7fa; /* Light blue background on hover */
 }
 
 #taskFilesList li a {
-    color: #007bff;
+    color: #007bff; /* Blue color for links */
     text-decoration: none;
     margin-right: 1rem;
 }
@@ -432,40 +442,57 @@ input[type="checkbox"] {
 }
 
 #taskFilesList li button {
-    background-color: #dc3545;
+    background-color: #dc3545; /* Red color for delete button */
     border: none;
     color: #fff;
-    padding: 0.3rem 0.6rem;
+    padding: 5px 10px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.875rem;
-    margin-left: auto; /* Align delete button to the right */
+    font-size: 0.875em;
+    margin-left: auto; /* Align button to the right */
+    transition: background-color 0.3s ease;
 }
 
 #taskFilesList li button:hover {
-    background-color: #c82333;
+    background-color: #c82333; /* Darker red on hover */
 }
 
 /* File Upload Container */
 #fileUploadContainer {
     margin-top: 1rem;
+    display: flex;
+    align-items: center;
 }
 
-#fileUpload {
-    display: inline-block;
-    margin-right: 0.5rem;
+.taskFileLowerDiv {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
 }
 
 #uploadFileButton {
-    background-color: #28a745;
+    background-color: #41c1d6; /* Red color for delete button */
     border: none;
     color: #fff;
-    padding: 0.5rem 1rem;
+    padding: 5px 10px;
+    margin-right: 10px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.875em;
+    margin-left: auto; /* Align button to the right */
+    transition: background-color 0.3s ease;
 }
 
 #uploadFileButton:hover {
-    background-color: #218838;
+    background-color: #1fa9b8; /* Darker blue-green on hover */
+}
+
+#fileUpload,
+#uploadFileButton {
+    display: none; /* Hide by default */
+}
+
+.rightNavDiv.active #fileUpload,
+.rightNavDiv.active #uploadFileButton {
+    display: block; /* Show when .rightNavDiv has 'active' class */
 }

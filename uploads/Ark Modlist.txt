@@ -1,0 +1,46 @@
+Modlist:
+
+- S+
+731604991
+
+- Dino pickup
+870709781
+
+- Meat spoiler
+569786012
+
+- Super Spyglass
+793605978
+
+- Death Recovery
+751991809
+
+- Upgrade Station
+821530042
+
+- Platforms Plus
+719928795
+
+- Pet Finder
+566887000
+
+- Reusable Plus
+693416678
+
+- Pimp my dino
+655581765
+
+- Auto Engrams
+1428596566
+
+- Beacon Enhancer
+609425335
+
+- Resource Stacks
+630601751
+
+- Bridge
+558651608
+
+- Platforms Plus
+719928795

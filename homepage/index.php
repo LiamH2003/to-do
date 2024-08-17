@@ -18,7 +18,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do</title>
     <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/homestyle13.css">
+    <link rel="stylesheet" href="../styles/homestyle14.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
     <script type="text/javascript" src="../script/homescript.js"></script>
     <script type="text/javascript">
@@ -67,6 +67,72 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 }
             }
 
+            function deleteTaskFile(fileId) {
+                console.log("Deleting file with ID:", fileId);
+                fetch('../functions/delete_task_file.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded' // Ensure the content type is correct for form data
+                    },
+                    body: new URLSearchParams({ 'file_id': fileId })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        console.log('File deleted successfully');
+                        // Remove the file item from the DOM
+                        document.querySelector(`button[data-file-id="${fileId}"]`).closest('li').remove();
+                    } else {
+                        console.error('Failed to delete file:', result.error);
+                    }
+                })
+                .catch(error => console.error('Error deleting file:', error));
+            }
+
+
+
+            document.getElementById('taskFilesList').addEventListener('click', function(event) {
+                if (event.target.tagName === 'BUTTON') {
+                    const fileId = event.target.dataset.fileId;
+                    console.log('Button clicked, fileId:', fileId); // Log the fileId for debugging
+                    if (fileId) {
+                        deleteTaskFile(fileId);
+                    } else {
+                        console.error('File ID is missing.');
+                    }
+                }
+            });
+
+
+
+
+
+            document.getElementById('uploadFileButton').addEventListener('click', function() {
+                const fileInput = document.getElementById('fileUpload');
+                const file = fileInput.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('task_id', currentTaskId);
+                    formData.append('file', file);
+
+                    fetch('../functions/upload_task_file.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('File uploaded successfully');
+                            fetchTaskDetails(currentTaskId); // Refresh task details
+                        } else {
+                            console.error('Error uploading file:', data.error);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                }
+            });
+
+
             // Update the fetchTaskDetails function to include setting the task status
             // Add this within the fetchTaskDetails function
             function fetchTaskDetails(taskId) {
@@ -86,20 +152,39 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                             // Initialize checkbox state
                             const statusCheckbox = document.querySelector('.rightNavDiv input[type="checkbox"]');
                             if (statusCheckbox) {
-                                // Set checkbox based on task status
                                 statusCheckbox.checked = task.status === 'done';  // 'done' means checkbox is checked
                                 statusCheckbox.addEventListener('change', function() {
                                     updateTaskStatus(this.checked);
                                 });
-                            } else {
-                                console.error('Checkbox not found in rightNavDiv');
                             }
+
+                            // Display task files
+                            const taskFilesList = document.getElementById('taskFilesList');
+                            taskFilesList.innerHTML = ''; // Clear existing files
+
+                            // Initialize files if not present
+                            const files = task.files || [];
+                            
+                            files.forEach(file => {
+                                const listItem = document.createElement('li');
+                                listItem.classList.add("deleteFileItem");
+                                listItem.innerHTML = `
+                                    <a href="${file.filepath}" target="_blank">${file.filename}</a>
+                                    <button data-file-id="${file.id}">Delete</button>
+                                `;
+                                taskFilesList.appendChild(listItem);
+                            });
+
                         } else {
                             console.error('Task not found or error:', task.error);
                         }
                     })
                     .catch(error => console.error('Error fetching task details:', error));
             }
+
+
+
+
 
 
 
@@ -238,6 +323,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
 
             function toggleRightNav() {
                 rightNavDiv.classList.toggle('active');
+                document.querySelector("#fileUpload").classList.toggle('active');
             }
 
             
@@ -308,26 +394,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 });
             });
 
-
-
-            function updateTaskDescription(newDescription) {
-                fetch('../functions/update_task_description.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ task_id: currentTaskId, description: newDescription })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        console.log('Task description updated successfully.');
-                    } else {
-                        console.error('Error updating task description:', data.error);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
 
             taskDescriptionElement.addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
@@ -644,27 +710,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
         }
 
 
-
-
-        function deleteTask(taskId) {
-            fetch(`../functions/delete_task.php?task_id=${taskId}`, {
-                method: 'GET',
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove task from the UI
-                    const taskItem = document.querySelector(`.taskItem input[type="checkbox"][id="task${taskId}"]`).closest('.taskItem');
-                    if (taskItem) {
-                        taskItem.remove();
-                    }
-                } else {
-                    console.error('Error deleting task:', data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
         function confirmDeleteList(listId, listName) {
             const confirmation = confirm(`Are you sure you want to delete the list "${listName}"?`);
             if (confirmation) {
@@ -772,6 +817,17 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     <div class="taskStatusSection">
                         <label for="taskStatus">Status:</label>
                         <input type="checkbox" id="taskStatus">
+                    </div>
+
+                    <div class="taskFilesSection">
+                        <h3>Attached Files</h3>
+                        <ul id="taskFilesList">
+                            <!-- Files will be populated here dynamically -->
+                        </ul>
+                        <div class="taskFileLowerDiv">
+                            <input type="file" id="fileUpload" />
+                            <button id="uploadFileButton">Upload File</button>
+                        </div>
                     </div>
 
                     <div class="taskCommentsSection">

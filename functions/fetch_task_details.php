@@ -5,7 +5,13 @@ require_once '../database/db_connection.php'; // Include your database connectio
 $taskId = isset($_GET['task_id']) ? intval($_GET['task_id']) : 0;
 
 if ($taskId > 0) {
-    $sql = "SELECT title, deadline, description, status FROM tasks WHERE id = ?";
+    // Query to fetch task details and associated files
+    $sql = "SELECT tasks.title, tasks.deadline, tasks.description, tasks.status, 
+            task_files.id AS file_id, task_files.filename, task_files.filepath
+            FROM tasks
+            LEFT JOIN task_files ON tasks.id = task_files.task_id
+            WHERE tasks.id = ?";
+
     $stmt = $conn->prepare($sql);
 
     if ($stmt === false) {
@@ -22,12 +28,29 @@ if ($taskId > 0) {
         exit;
     }
 
-    if ($result->num_rows > 0) {
-        $task = $result->fetch_assoc();
-        echo json_encode($task);  // This now includes the status field
-    } else {
-        echo json_encode(['error' => 'Task not found']);
+    $task = [];
+    $files = [];
+
+    while ($row = $result->fetch_assoc()) {
+        if (empty($task)) {
+            // Populate task details
+            $task['title'] = $row['title'];
+            $task['deadline'] = $row['deadline'];
+            $task['description'] = $row['description'];
+            $task['status'] = $row['status'];
+        }
+        if ($row['file_id']) {
+            // Collect files information
+            $files[] = [
+                'id' => $row['file_id'],
+                'filename' => $row['filename'],
+                'filepath' => $row['filepath']
+            ];
+        }
     }
+
+    $task['files'] = $files;
+    echo json_encode($task);
 
     $stmt->close();
 } else {
