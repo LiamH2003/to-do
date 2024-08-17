@@ -2,11 +2,11 @@
 header('Content-Type: application/json');
 require_once '../database/db_connection.php'; // Include your database connection file
 
-$fileId = isset($_POST['file_id']) ? intval($_POST['file_id']) : 0;
+$taskId = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
 
-if ($fileId > 0) {
-    // Query to delete the file
-    $sql = "DELETE FROM task_files WHERE id = ?";
+if ($taskId > 0) {
+    // Query to delete the task
+    $sql = "DELETE FROM tasks WHERE id = ?";
     $stmt = $conn->prepare($sql);
 
     if ($stmt === false) {
@@ -14,18 +14,18 @@ if ($fileId > 0) {
         exit;
     }
 
-    $stmt->bind_param('i', $fileId);
+    $stmt->bind_param('i', $taskId);
     $stmt->execute();
 
     if ($stmt->affected_rows > 0) {
         echo json_encode(['success' => true]);
     } else {
-        echo json_encode(['error' => 'Failed to delete file']);
+        echo json_encode(['error' => 'Failed to delete task']);
     }
 
     $stmt->close();
 } else {
-    echo json_encode(['error' => 'Invalid file ID']);
+    echo json_encode(['error' => 'Invalid task ID']);
 }
 
 $conn->close();

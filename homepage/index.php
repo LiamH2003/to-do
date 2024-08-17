@@ -167,6 +167,7 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
 
 
 
+
             document.getElementById('uploadFileButton').addEventListener('click', function() {
                 const fileInput = document.getElementById('fileUpload');
                 const file = fileInput.files[0];
@@ -564,10 +565,12 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
 
             function cleanupNewListInput() {
                 if (newListInput.parentNode) {
+                    // Check if the element is still in the DOM before removing it
                     newListInput.remove(); // Remove the input field
                 }
                 newListText.style.display = 'block'; // Show the original text
             }
+
 
             newListInput.addEventListener('keypress', handleNewListInput);
             newListInput.addEventListener('blur', cleanupNewListInput);
@@ -673,15 +676,23 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
 
                         taskList.appendChild(taskItem);
 
+                        // Add event listener to the checkbox only
+                        const checkbox = taskItem.querySelector('input[type="checkbox"]');
+                        checkbox.addEventListener('change', function() {
+                            if (this.checked) {
+                                deleteTask(task.id);
+                            }
+                        });
+
                         // Set up click listener for taskItem
                         setupTaskItemClickListener(taskItem);
 
                         // Prevent clicks on taskItem from toggling the checkbox
-                        taskItem.querySelector('input[type="checkbox"]').addEventListener('change', function() {
-                        if (this.checked) {
-                            deleteTask(task.id);
-                        }
-                    });
+                        taskItem.addEventListener('click', function(event) {
+                            if (event.target.tagName.toLowerCase() !== 'input') {
+                                event.preventDefault(); // Prevent default behavior if not clicking checkbox
+                            }
+                        });
                     });
 
                 })
