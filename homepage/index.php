@@ -10,6 +10,8 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 // Check if the session variables are set before displaying them
 $username = isset($_SESSION["username"]) ? htmlspecialchars($_SESSION["username"]) : "Guest";
 $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No Email";
+$user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,10 +20,11 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do</title>
     <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/homestyle14.css">
+    <link rel="stylesheet" href="../styles/homestyle15.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
     <script type="text/javascript" src="../script/homescript.js"></script>
     <script type="text/javascript">
+        var userId = <?php echo json_encode($user_id); ?>;
         document.addEventListener('DOMContentLoaded', function() {
             let currentListId = null; // Variable to keep track of the current list ID
             let currentTaskId = null; // Variable to keep track of the current task ID
@@ -66,6 +69,44 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     console.error('Checkbox not found for task ID:', currentTaskId);
                 }
             }
+
+            document.getElementById('addCommentButton').addEventListener('click', function() {
+                const commentTextarea = document.getElementById('newComment');
+                const comment = commentTextarea.value.trim();
+                
+                if (comment) {
+                    fetch('../functions/add_comment.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            'task_id': currentTaskId,
+                            'user_id': userId, // Replace with the actual user ID (securely managed)
+                            'comment': comment
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            // Add new comment to the list
+                            const taskCommentsList = document.getElementById('taskCommentsList');
+                            const newCommentItem = document.createElement('li');
+                            newCommentItem.textContent = `You: ${comment} (posted just now)`;
+                            taskCommentsList.appendChild(newCommentItem);
+
+                            // Clear the textarea
+                            commentTextarea.value = '';
+                        } else {
+                            console.error('Failed to add comment:', result.error);
+                        }
+                    })
+                    .catch(error => console.error('Error adding comment:', error));
+                } else {
+                    console.error('Comment cannot be empty');
+                }
+            });
+
 
             function deleteTaskFile(fileId) {
                 console.log("Deleting file with ID:", fileId);
@@ -162,9 +203,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                             const taskFilesList = document.getElementById('taskFilesList');
                             taskFilesList.innerHTML = ''; // Clear existing files
 
-                            // Initialize files if not present
                             const files = task.files || [];
-                            
                             files.forEach(file => {
                                 const listItem = document.createElement('li');
                                 listItem.classList.add("deleteFileItem");
@@ -175,12 +214,28 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                                 taskFilesList.appendChild(listItem);
                             });
 
+                            // Display existing comments
+                            const taskCommentsList = document.getElementById('taskCommentsList');
+                            taskCommentsList.innerHTML = ''; // Clear existing comments
+
+                            const comments = task.comments || [];
+                            comments.forEach(comment => {
+                                const commentItem = document.createElement('li');
+                                commentItem.textContent = `${comment.username}: ${comment.comment} (posted on ${comment.created_at})`;
+                                taskCommentsList.appendChild(commentItem);
+                            });
+
+                            // Show file upload and upload button
+                            document.getElementById('fileUpload').style.display = 'block';
+                            document.getElementById('uploadFileButton').style.display = 'block';
+
                         } else {
                             console.error('Task not found or error:', task.error);
                         }
                     })
                     .catch(error => console.error('Error fetching task details:', error));
             }
+
 
 
 
@@ -205,34 +260,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     })
                     .catch(error => console.error('Error fetching comments:', error));
             }
-
-            // Function to add a new comment
-            function addComment(taskId, commentText) {
-                fetch('../functions/add_comment.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ task_id: taskId, comment: commentText })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        fetchComments(taskId); // Refresh comments list
-                    } else {
-                        console.error('Error adding comment:', data.error);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            }
-
-            // Add event listener to the "Add Comment" button
-            document.getElementById('addCommentButton').addEventListener('click', function() {
-                const commentText = document.getElementById('newComment').value.trim();
-                if (commentText && currentTaskId) {
-                    addComment(currentTaskId, commentText);
-                }
-            });
 
 
             taskDeadlineElement.addEventListener('change', function() {
@@ -796,7 +823,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
             </div>
 
             <div class="rightNavDiv">
-                <div class="taskDetails">
                     <!-- Task Title Section -->
                     <div class="taskTitleSection">
                         <h2 id="taskTitle">Task Title</h2>
@@ -838,7 +864,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                         <textarea id="newComment" placeholder="Add a comment..."></textarea>
                         <button id="addCommentButton">Add Comment</button>
                     </div>
-                </div>
+                
             </div>
 
 

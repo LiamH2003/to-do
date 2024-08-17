@@ -14,8 +14,9 @@ if ($taskId > 0) {
 
     $stmt = $conn->prepare($sql);
 
+    // Check if statement preparation failed
     if ($stmt === false) {
-        echo json_encode(['error' => 'Failed to prepare statement']);
+        echo json_encode(['error' => 'Failed to prepare task details statement: ' . $conn->error]);
         exit;
     }
 
@@ -24,7 +25,7 @@ if ($taskId > 0) {
     $result = $stmt->get_result();
 
     if ($result === false) {
-        echo json_encode(['error' => 'Failed to execute query']);
+        echo json_encode(['error' => 'Failed to execute task details query: ' . $stmt->error]);
         exit;
     }
 
@@ -50,9 +51,45 @@ if ($taskId > 0) {
     }
 
     $task['files'] = $files;
+
+    // Query to fetch comments associated with the task
+    $comment_sql = "SELECT comments.comment, comments.created_at, account.username 
+                    FROM comments 
+                    JOIN account ON comments.user_id = account.id 
+                    WHERE comments.task_id = ?";
+    
+    $comment_stmt = $conn->prepare($comment_sql);
+
+    // Check if statement preparation failed for comments query
+    if ($comment_stmt === false) {
+        echo json_encode(['error' => 'Failed to prepare comments statement: ' . $conn->error]);
+        exit;
+    }
+
+    $comment_stmt->bind_param('i', $taskId);
+    $comment_stmt->execute();
+    $comment_result = $comment_stmt->get_result();
+
+    if ($comment_result === false) {
+        echo json_encode(['error' => 'Failed to execute comments query: ' . $comment_stmt->error]);
+        exit;
+    }
+
+    $comments = [];
+    while ($comment_row = $comment_result->fetch_assoc()) {
+        $comments[] = [
+            'comment' => $comment_row['comment'],
+            'created_at' => $comment_row['created_at'],
+            'username' => $comment_row['username']
+        ];
+    }
+
+    $task['comments'] = $comments;
+
     echo json_encode($task);
 
     $stmt->close();
+    $comment_stmt->close();
 } else {
     echo json_encode(['error' => 'Invalid task ID']);
 }

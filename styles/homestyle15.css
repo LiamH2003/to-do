@@ -242,20 +242,28 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+.taskDetails {
+    overflow-y:scroll; /* Enable scrolling for vertical overflow */
+}
+
 .rightNavDiv {
     position: absolute;
     right: 0;
     z-index: 10;
     width: 0px;
-    background-color: white;
     height: 100vh;
+    background-color: white;
     transition: width 0.3s ease;
+    overflow-y:scroll; /* Enable scrolling for vertical overflow */
+    display: flex; /* Flexbox for better layout control */
+    flex-direction: column; /* Stack children vertically */
 }
 
 .rightNavDiv.active {
     width: 25vw;
-    padding: 20px;
+    padding: 30px;
 }
+
 
 .newList input {
     width: 100%;
@@ -498,7 +506,12 @@ input[type="checkbox"] {
 }
 
 .taskCommentsSection {
-    margin-top: 0px;
+    margin-top: 20px;
+    margin-bottom: 50px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #taskCommentsList {
@@ -508,14 +521,19 @@ input[type="checkbox"] {
 }
 
 #taskCommentsList li {
-    padding: 5px;
-    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 5px solid #41c1d6;
+    transition: background-color 0.3s ease;
 }
 
 #newComment {
     width: calc(100% - 20px);
-    
     padding: 10px;
+    margin-top: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
     resize: vertical; /* Allow vertical resizing */
@@ -534,3 +552,4 @@ input[type="checkbox"] {
 #addCommentButton:hover {
     background-color: #1fa9b8;
 }
+
