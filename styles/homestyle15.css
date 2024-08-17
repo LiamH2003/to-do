@@ -270,7 +270,6 @@ input[type="checkbox"] {
     font-size: 1em;
     margin-top: 0px;
     margin-bottom: 0px;
-    border-bottom: 5px solid #41c1d6;
 }
 
 .newList input:focus {

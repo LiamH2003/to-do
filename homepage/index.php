@@ -130,6 +130,25 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
                 .catch(error => console.error('Error deleting file:', error));
             }
 
+            function deleteTask(taskId) {
+                fetch(`../functions/delete_task.php?task_id=${taskId}`, {
+                    method: 'GET',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove task from the UI
+                        const taskItem = document.querySelector(`.taskItem input[type="checkbox"][id="task${taskId}"]`).closest('.taskItem');
+                        if (taskItem) {
+                            taskItem.remove();
+                        }
+                    } else {
+                        console.error('Error deleting task:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
 
 
             document.getElementById('taskFilesList').addEventListener('click', function(event) {
@@ -658,11 +677,11 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
                         setupTaskItemClickListener(taskItem);
 
                         // Prevent clicks on taskItem from toggling the checkbox
-                        taskItem.addEventListener('click', function(event) {
-                            if (event.target.tagName.toLowerCase() !== 'input') {
-                                event.preventDefault(); // Prevent default behavior if not clicking checkbox
-                            }
-                        });
+                        taskItem.querySelector('input[type="checkbox"]').addEventListener('change', function() {
+                        if (this.checked) {
+                            deleteTask(task.id);
+                        }
+                    });
                     });
 
                 })
