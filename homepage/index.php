@@ -730,6 +730,15 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
                         <img src="../images/thrash.png" class="deleteIcon" alt="Delete List" title="Delete List">`;
                     navCategories.appendChild(listItem);
 
+                    // Set the currentListId to the new list
+                    currentListId = data.list_id;
+
+                    // Fetch tasks for the new list
+                    fetchTasks(currentListId);
+
+                    // Ensure task container is visible
+                    taskContainer.style.display = 'block';
+
                     listItem.querySelector('.listTitle').addEventListener('click', function() {
                         currentListId = data.list_id; // Update currentListId
                         fetchTasks(currentListId);
@@ -745,6 +754,7 @@ $user_id = isset($_SESSION["id"]) ? intval($_SESSION["id"]) : null;
             })
             .catch(error => console.error('Error:', error));
         }
+
 
         function createNewTask(taskName, listId) {
             fetch('../functions/create_task.php', {
