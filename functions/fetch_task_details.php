@@ -5,7 +5,7 @@ require_once '../database/db_connection.php'; // Include your database connectio
 $taskId = isset($_GET['task_id']) ? intval($_GET['task_id']) : 0;
 
 if ($taskId > 0) {
-    $sql = "SELECT title, deadline, description FROM tasks WHERE id = ?";
+    $sql = "SELECT title, deadline, description, status FROM tasks WHERE id = ?";
     $stmt = $conn->prepare($sql);
 
     if ($stmt === false) {
@@ -24,7 +24,7 @@ if ($taskId > 0) {
 
     if ($result->num_rows > 0) {
         $task = $result->fetch_assoc();
-        echo json_encode($task);  // This should return the task details as JSON
+        echo json_encode($task);  // This now includes the status field
     } else {
         echo json_encode(['error' => 'Task not found']);
     }

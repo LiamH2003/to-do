@@ -1,13 +1,16 @@
 <?php
-session_start();
-include('../database/db_connection.php'); 
+require_once('../database/db_connection.php');
 
-$task_id = $_POST['task_id'];
-$comment = $_POST['comment'];
-$user_id = $_SESSION['id'];
+$data = json_decode(file_get_contents('php://input'), true);
+$task_id = $data['task_id'] ?? '';
+$comment = $data['comment'] ?? '';
 
-$sql = "INSERT INTO comments (task_id, user_id, comment) VALUES (?, ?, ?)";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('iis', $task_id, $user_id, $comment);
-$stmt->execute();
+if ($task_id && $comment) {
+    $stmt = $pdo->prepare("INSERT INTO comments (task_id, user_id, comment, created_at) VALUES (?, ?, ?, NOW())");
+    $user_id = $_SESSION['id']; // Assuming you have a session with user ID
+    $stmt->execute([$task_id, $user_id, $comment]);
+    echo json_encode(['success' => true]);
+} else {
+    echo json_encode(['error' => 'Invalid data.']);
+}
 ?>

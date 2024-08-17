@@ -22,7 +22,7 @@ if (isset($data['title']) && isset($data['list_id'])) {
     }
 
     // Prepare the SQL query to insert the new task
-    $query = $conn->prepare('INSERT INTO tasks (list_id, title, status, deadline) VALUES (?, ?, "Pending", NULL)');
+    $query = $conn->prepare('INSERT INTO tasks (list_id, title, status, deadline) VALUES (?, ?, "todo", NULL)');
 
     // Check if the statement preparation was successful
     if ($query === false) {

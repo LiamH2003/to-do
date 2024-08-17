@@ -18,7 +18,7 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To Do</title>
     <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/homestyle12.css">
+    <link rel="stylesheet" href="../styles/homestyle13.css">
     <link rel="icon" href="../images/to-do_icon.png" type="image/icon type">
     <script type="text/javascript" src="../script/homescript.js"></script>
     <script type="text/javascript">
@@ -30,6 +30,125 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
             const taskTitleElement = document.getElementById('taskTitle');
             const taskDeadlineElement = document.getElementById('taskDeadline');
             const taskDescriptionElement = document.getElementById('taskDescription');
+
+            // Function to update the task status
+            // Update the existing updateTaskStatus function to include console log
+            function updateTaskStatus(isDone) {
+                console.log("Updating task status. Task ID:", currentTaskId, "Is Done:", isDone);
+                fetch('../functions/update_task_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: currentTaskId, status: isDone ? 'done' : 'todo' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Task status updated successfully to:', data.new_status);
+                    } else {
+                        console.error('Error updating task status:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+
+           // Set the checkbox state based on the task status
+            function setTaskStatus(checked) {
+                const statusCheckbox = document.querySelector(`input[id^="task${currentTaskId}"]`);
+                if (statusCheckbox) {
+                    statusCheckbox.checked = checked;
+                    statusCheckbox.addEventListener('change', function() {
+                        updateTaskStatus(this.checked);
+                    });
+                } else {
+                    console.error('Checkbox not found for task ID:', currentTaskId);
+                }
+            }
+
+            // Update the fetchTaskDetails function to include setting the task status
+            // Add this within the fetchTaskDetails function
+            function fetchTaskDetails(taskId) {
+                console.log("Fetching task details for ID:", taskId);
+                fetch(`../functions/fetch_task_details.php?task_id=${taskId}`)
+                    .then(response => response.json())
+                    .then(task => {
+                        console.log('Task data:', task);  // Log the task data
+                        if (task && !task.error) {
+                            // Update the DOM elements with task details
+                            document.getElementById('taskTitle').textContent = task.title || 'No Title';
+                            document.getElementById('taskDeadline').value = task.deadline || '';
+                            document.getElementById('taskDescription').value = task.description || '';
+                            currentTaskId = taskId;
+                            toggleRightNav();
+
+                            // Initialize checkbox state
+                            const statusCheckbox = document.querySelector('.rightNavDiv input[type="checkbox"]');
+                            if (statusCheckbox) {
+                                // Set checkbox based on task status
+                                statusCheckbox.checked = task.status === 'done';  // 'done' means checkbox is checked
+                                statusCheckbox.addEventListener('change', function() {
+                                    updateTaskStatus(this.checked);
+                                });
+                            } else {
+                                console.error('Checkbox not found in rightNavDiv');
+                            }
+                        } else {
+                            console.error('Task not found or error:', task.error);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching task details:', error));
+            }
+
+
+
+
+            // Function to fetch and display comments for the selected task
+            function fetchComments(taskId) {
+                fetch(`../functions/fetch_comments.php?task_id=${taskId}`)
+                    .then(response => response.json())
+                    .then(comments => {
+                        const commentsList = document.getElementById('taskCommentsList');
+                        commentsList.innerHTML = ''; // Clear existing comments
+
+                        comments.forEach(comment => {
+                            const commentItem = document.createElement('li');
+                            commentItem.textContent = comment.comment; // Display comment text
+                            commentsList.appendChild(commentItem);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching comments:', error));
+            }
+
+            // Function to add a new comment
+            function addComment(taskId, commentText) {
+                fetch('../functions/add_comment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ task_id: taskId, comment: commentText })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        fetchComments(taskId); // Refresh comments list
+                    } else {
+                        console.error('Error adding comment:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            // Add event listener to the "Add Comment" button
+            document.getElementById('addCommentButton').addEventListener('click', function() {
+                const commentText = document.getElementById('newComment').value.trim();
+                if (commentText && currentTaskId) {
+                    addComment(currentTaskId, commentText);
+                }
+            });
+
 
             taskDeadlineElement.addEventListener('change', function() {
                 const newDeadline = this.value.trim();
@@ -121,24 +240,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 rightNavDiv.classList.toggle('active');
             }
 
-    
-            function fetchTaskDetails(taskId) {
-                fetch(`../functions/fetch_task_details.php?task_id=${taskId}`)
-                    .then(response => response.json())
-                    .then(task => {
-                        if (task && !task.error) {
-                            document.getElementById('taskTitle').textContent = task.title || 'No Title';
-                            document.getElementById('taskDeadline').value = task.deadline || '';
-                            document.getElementById('taskDescription').value = task.description || '';
-                            currentTaskId = taskId;
-                            toggleRightNav();
-                        } else {
-                            console.error('Task not found or error:', task.error);
-                        }
-                    })
-                    .catch(error => console.error('Error fetching task details:', error));
-            }
-
             
 
             document.addEventListener('click', function(event) {
@@ -151,25 +252,6 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                 }
             });
 
-            function fetchTaskDetails(taskId) {
-                console.log("Fetching task details for ID:", taskId);
-                fetch(`../functions/fetch_task_details.php?task_id=${taskId}`)
-                    .then(response => response.json())
-                    .then(task => {
-                        console.log('Task data:', task);  // Log the task data
-                        if (task && !task.error) {
-                            // Update the DOM elements with task details
-                            document.getElementById('taskTitle').textContent = task.title || 'No Title';
-                            document.getElementById('taskDeadline').value = task.deadline || '';
-                            document.getElementById('taskDescription').value = task.description || '';
-                            currentTaskId = taskId;
-                            toggleRightNav();
-                        } else {
-                            console.error('Task not found or error:', task.error);
-                        }
-                    })
-                    .catch(error => console.error('Error fetching task details:', error));
-            }
 
             function updateTaskTitle(newTitle) {
                 fetch('../functions/update_task_title.php', {
@@ -280,6 +362,17 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     .catch(error => console.error('Error:', error));
                 }
             });
+
+            function setupRightNavCheckboxListener() {
+                const statusCheckbox = document.getElementById('taskStatus');
+                if (statusCheckbox) {
+                    statusCheckbox.addEventListener('change', function() {
+                        updateTaskStatus(this.checked);
+                    });
+                } else {
+                    console.error('Checkbox not found in rightNavDiv');
+                }
+            }
 
             // JavaScript Function to Set Up Click Listener
             function setupTaskItemClickListener(taskItem) {
@@ -551,6 +644,8 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
         }
 
 
+
+
         function deleteTask(taskId) {
             fetch(`../functions/delete_task.php?task_id=${taskId}`, {
                 method: 'GET',
@@ -672,6 +767,20 @@ $email = isset($_SESSION["email"]) ? htmlspecialchars($_SESSION["email"]) : "No 
                     <div class="taskDescriptionSection">
                         <label for="taskDescription">Description:</label>
                         <textarea id="taskDescription" placeholder="Enter task description..."></textarea>
+                    </div>
+
+                    <div class="taskStatusSection">
+                        <label for="taskStatus">Status:</label>
+                        <input type="checkbox" id="taskStatus">
+                    </div>
+
+                    <div class="taskCommentsSection">
+                        <h3>Comments</h3>
+                        <ul id="taskCommentsList">
+                            <!-- Comments will be populated here dynamically -->
+                        </ul>
+                        <textarea id="newComment" placeholder="Add a comment..."></textarea>
+                        <button id="addCommentButton">Add Comment</button>
                     </div>
                 </div>
             </div>
