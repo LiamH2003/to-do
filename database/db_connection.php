@@ -1,7 +1,7 @@
 <?php
-$servername = "localhost:3306";
+$servername = "localhost:3307";
 $username = "root";  // Replace with your database username
-$password = "track22";      // Replace with your database password
+$password = "";      // Replace with your database password
 $dbname = "to-do";   // The name of your database
 
 // Create connection
